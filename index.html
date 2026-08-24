@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Drawing</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="gallery.css">
+    <link rel="stylesheet" href="editor.css">
+    <link rel="stylesheet" href="nav.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module" src="navigation.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="offline-indicator" style="display: none;">You are offline</div>
+    <nav>
+        <a href="?page=index">Editor</a>
+        <a href="?page=gallery">Gallery</a>
+    </nav>
+    <main>
+        <section id="editor">
+            <h1 class="section-heading">Editor</h1>
+            <form>
+                <fieldset>
+                    <legend>Color</legend>
+                    <input id="color" type="color" autocomplete="off">
+                </fieldset>
+                <fieldset>
+                    <legend>Size</legend>
+                    <div class="size">
+                        <input id="size" type="range" min="1" max="100" autocomplete="off" autofocus>
+                        <input id="size2" type="number" min="1" max="100" step="1" required inputmode="numeric"
+                            placeholder="1-100" autocomplete="off">
+                    </div>
+                </fieldset>
+                <fieldset class="tools">
+                    <legend>Tool</legend>
+                    <div>
+                        <label for="eraser">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px"
+                                fill="currentColor">
+                                <title>Eraser</title>
+                                <path
+                                    d="M690-240h190v80H610l80-80Zm-500 80-85-85q-23-23-23.5-57t22.5-58l440-456q23-24 56.5-24t56.5 23l199 199q23 23 23 57t-23 57L520-160H190Zm296-80 314-322-198-198-442 456 64 64h262Zm-6-240Z" />
+                            </svg>
+                        </label>
+                        <input type="radio" id="eraser" name="tool" value="Eraser">
+                        <input type="radio" id="brush" name="tool" value="Brush" checked>
+                        <label for="brush">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px"
+                                fill="currentColor">
+                                <title>
+                                    Brush
+                                </title>
+                                <path
+                                    d="M223.33-118q-37.55 0-74.27-15-36.73-15-62.39-44.33 32-8 51-30.17t19-61.17q0-45.83 32.11-77.91 32.12-32.09 78-32.09 45.89 0 77.89 32.09 32 32.08 32 77.91Q376.67-204 332-161t-108.67 43Zm0-66.67q34.34 0 60.5-24.5 26.17-24.5 26.17-59.5 0-19-12.17-31.16Q285.67-312 266.67-312t-31.17 12.17q-12.17 12.16-12.17 31.16 0 33.67-7.5 52.34-7.5 18.66-25.83 27 5.67 1.33 16.67 3 11 1.66 16.66 1.66Zm230-171.33-96.66-100 370-370q13-13 29.83-13.5t30.83 13.5l37.34 37.33q14 14 13.66 31-.33 17-13.66 30.34L453.33-356Zm-186.66 87.33Z" />
+                            </svg>
+                        </label>
+                    </div>
+                </fieldset>
+            </form>
+            <canvas width="1000" height="1000"></canvas>
+            <div id="cursor"></div>
+            <footer class="canvas-control">
+                <button id="save">Save to gallery<svg xmlns="http://www.w3.org/2000/svg" height="32px"
+                        viewBox="0 -960 960 960" width="32px" fill="currentColor">
+                        <path
+                            d="M840-680v480q0 33-23.5 56.5T760-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h480l160 160Zm-80 34L646-760H200v560h560v-446ZM565-275q35-35 35-85t-35-85q-35-35-85-35t-85 35q-35 35-35 85t35 85q35 35 85 35t85-35ZM240-560h360v-160H240v160Zm-40-86v446-560 114Z" />
+                    </svg></button>
+                <button id="download">Download<svg xmlns="http://www.w3.org/2000/svg" height="32px"
+                        viewBox="0 -960 960 960" width="32px" fill="currentColor">
+                        <path
+                            d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z" />
+                    </svg></button>
+            </footer>
+        </section>
+        <section id="gallery">
+            <h1 class="section-heading">Gallery</h1>
+            <p class="gallery-empty">No saved drawings yet.</p>
+            <div class="gallery-grid"></div>
+        </section>
+    </main>
+    <div id="toast" class="toast"></div>
+</body>
+
+</html>

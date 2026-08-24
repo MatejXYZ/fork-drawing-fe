@@ -1,0 +1,140 @@
+canvas {
+  width: 100%;
+  touch-action: none;
+  user-select: none;
+  overscroll-behavior: contain;
+  max-width: 650px;
+  cursor: none;
+
+  box-shadow:
+    0 0 4px 1px rgba(255, 255, 255, 0.1),
+    0 0 16px 1px black;
+}
+
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  & > svg {
+    display: block;
+    overflow: visible;
+  }
+}
+
+#editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 75%;
+  @media screen and (max-width: 650px) {
+    width: 100%;
+  }
+}
+
+#editor > .section-heading {
+  align-self: flex-start;
+}
+
+form {
+  width: 100%;
+  margin: 24px 0;
+  user-select: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+
+  & > fieldset {
+    margin: 0 8px;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+
+    & > legend {
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+  }
+
+  & .tools {
+    justify-content: center;
+  }
+
+  & .size {
+    display: flex;
+    border: solid 1px var(--border);
+    border-radius: 8px;
+    background-color: var(--surface);
+    box-shadow: 0 0 4px 8px var(--shadow);
+    overflow: hidden;
+  }
+
+  & input[type="range"] {
+    @media screen and (max-width: 650px) {
+      width: 124px;
+    }
+  }
+}
+
+input[type="radio"] {
+  display: none;
+}
+
+label {
+  color: var(--text);
+}
+
+label[for="eraser"],
+label[for="brush"] {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px;
+  display: inline-block;
+  box-shadow: 0px 0px 8px 4px var(--shadow);
+  transition: all 0.3s;
+  color: var(--muted);
+
+  &.active {
+    background-color: var(--surface-2);
+    color: var(--primary);
+  }
+
+  &:hover {
+    background-color: var(--surface-2);
+    color: var(--text);
+  }
+
+  &.active:hover {
+    background-color: var(--surface-2);
+    color: var(--primary-hover);
+  }
+}
+
+.canvas-control {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: 24px;
+
+  & > button {
+    margin: 0 4px;
+    display: flex;
+
+    & > svg {
+      margin-left: 4px;
+    }
+  }
+}
