@@ -2,6 +2,12 @@ import { showSuccessFeedback } from "./toast.js";
 
 const editorPage = document.querySelector("#editor");
 
+//
+
+const drawing = {
+  actions: [],
+};
+
 // config
 
 const backgroundColor = "#fff";
@@ -94,7 +100,6 @@ const getCoordinates = (x, y) => {
   return [x * scale, y * scale];
 };
 
-const actions = [];
 let points = []; // list of coordinates in a single action
 
 // cursor pointer events
@@ -115,8 +120,8 @@ canvas.addEventListener("pointerdown", (e) => {
 });
 document.addEventListener("pointerup", (e) => {
   canvas.releasePointerCapture(e.pointerId);
-  actions.push(points);
-  console.info(actions);
+  drawing.actions.push({ coordinates: points });
+  autosave();
   isDrawing = false;
 });
 canvas.addEventListener("pointermove", (e) => {
@@ -338,4 +343,51 @@ export const showEditor = () => {
 
 export const hideEditor = () => {
   editorPage.style.display = "none";
+};
+
+// BE connection
+
+async function post(url, body) {
+  const response = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  return response;
+}
+
+async function patch(url, body) {
+  const response = await fetch(url, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  return response;
+}
+
+let isDrawingBeingCreated = false;
+let drawingId = null;
+
+const createDrawing = async () => {
+  const response = await post("http://localhost:8080/drawings", drawing);
+  const json = await response.json();
+  drawingId = json.id;
+};
+
+const autosave = () => {
+  // TODO - debounce
+  if (drawingId != null) {
+    patch("http://localhost:8080/drawings/" + drawingId, drawing);
+  } else if (!isDrawingBeingCreated) {
+    isDrawingBeingCreated = true;
+    createDrawing();
+  } else {
+    console.info("Waiting to create drawing on BE.");
+  }
 };
