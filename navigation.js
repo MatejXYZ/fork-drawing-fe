@@ -1,4 +1,5 @@
 import { hideEditor, showEditor } from "./editor.js";
+import { hideDrafts, showDrafts } from "./drafts.js";
 import { hideGallery, showGallery } from "./gallery.js";
 
 // navbar
@@ -6,6 +7,7 @@ import { hideGallery, showGallery } from "./gallery.js";
 const nav = document.querySelector("nav");
 const editorLink = nav.querySelector('a[href="?page=index"]');
 const galleryLink = nav.querySelector('a[href="?page=gallery"]');
+const draftsLink = nav.querySelector('a[href="?page=drafts"]');
 
 const toggleActiveOn = (el) => {
   el.classList.toggle("active", true);
@@ -19,10 +21,17 @@ const updateActiveLink = (page) => {
     case "gallery":
       toggleActiveOn(galleryLink);
       toggleActiveOff(editorLink);
+      toggleActiveOff(draftsLink);
+      break;
+    case "drafts":
+      toggleActiveOn(draftsLink);
+      toggleActiveOff(galleryLink);
+      toggleActiveOff(editorLink);
       break;
     default:
       toggleActiveOn(editorLink);
       toggleActiveOff(galleryLink);
+      toggleActiveOff(draftsLink);
   }
 };
 
@@ -39,10 +48,17 @@ const showPage = (page) => {
     case "gallery":
       showGallery();
       hideEditor();
+      hideDrafts();
+      break;
+    case "drafts":
+      showDrafts();
+      hideEditor();
+      hideGallery();
       break;
     default:
       showEditor();
       hideGallery();
+      hideDrafts();
   }
 };
 

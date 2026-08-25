@@ -19,8 +19,9 @@
 <body>
     <div id="offline-indicator" style="display: none;">You are offline</div>
     <nav>
+        <a href="?page=gallery">Home</a>
         <a href="?page=index">Editor</a>
-        <a href="?page=gallery">Gallery</a>
+        <a href="?page=drafts">Drafts</a>
     </nav>
     <main>
         <section id="editor">
@@ -83,6 +84,11 @@
             <h1 class="section-heading">Gallery</h1>
             <p class="gallery-empty">No saved drawings yet.</p>
             <div class="gallery-grid"></div>
+        </section>
+        <section id="drafts">
+            <h1 class="section-heading">Drafts</h1>
+            <p class="drafts-empty">No drafts yet.</p>
+            <div class="drafts-grid"></div>
         </section>
     </main>
     <div id="toast" class="toast"></div>
