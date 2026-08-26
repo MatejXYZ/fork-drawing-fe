@@ -1,11 +1,38 @@
 import { showSuccessFeedback } from "./toast.js";
+import { get, patch, post } from "./api.js";
 
 const editorPage = document.querySelector("#editor");
+const editorListeners = [];
+let editorListenersAttached = true;
+
+const addEditorEventListener = (target, type, listener) => {
+  target.addEventListener(type, listener);
+  editorListeners.push({ target, type, listener });
+};
+
+const attachEditorListeners = () => {
+  if (editorListenersAttached) return;
+
+  editorListeners.forEach(({ target, type, listener }) => {
+    target.addEventListener(type, listener);
+  });
+  editorListenersAttached = true;
+};
+
+const detachEditorListeners = () => {
+  if (!editorListenersAttached) return;
+
+  editorListeners.forEach(({ target, type, listener }) => {
+    target.removeEventListener(type, listener);
+  });
+  editorListenersAttached = false;
+};
 
 //
 
 const drawing = {
   actions: [],
+  thumbnail: null,
 };
 
 // config
@@ -13,7 +40,7 @@ const drawing = {
 const backgroundColor = "#fff";
 let scale = 2;
 let brushSize = 25;
-let color = "#000";
+let color = "#000000";
 let isEraser = false;
 const defaultSize = 25;
 
@@ -87,13 +114,14 @@ const handleWindowResize = () => {
   redrawBrushCursor();
 };
 
-window.addEventListener("resize", handleWindowResize);
+addEditorEventListener(window, "resize", handleWindowResize);
 
 handleWindowResize();
 
 // drawing
 
 let isDrawing = false;
+let editorLoadGeneration = 0;
 
 // fn that calculates coordinates to scale
 const getCoordinates = (x, y) => {
@@ -104,27 +132,29 @@ let points = []; // list of coordinates in a single action
 
 // cursor pointer events
 
-canvas.addEventListener("pointerenter", (e) => {
+addEditorEventListener(canvas, "pointerenter", (e) => {
   showBrushCursor();
 });
-canvas.addEventListener("pointerleave", () => {
+addEditorEventListener(canvas, "pointerleave", () => {
   hideBrushCursor();
 });
 
 // drawing pointer events
-canvas.addEventListener("pointerdown", (e) => {
+addEditorEventListener(canvas, "pointerdown", (e) => {
   canvas.setPointerCapture(e.pointerId);
   isDrawing = true;
   points = [];
   tryDraw(e);
 });
-document.addEventListener("pointerup", (e) => {
+addEditorEventListener(document, "pointerup", (e) => {
   canvas.releasePointerCapture(e.pointerId);
-  drawing.actions.push({ coordinates: points });
+  if (points.length > 0) {
+    drawing.actions.push({ coordinates: points });
+  }
   autosave();
   isDrawing = false;
 });
-canvas.addEventListener("pointermove", (e) => {
+addEditorEventListener(canvas, "pointermove", (e) => {
   positionBrushCursor(e.clientX, e.clientY);
   tryDraw(e);
 });
@@ -132,12 +162,12 @@ canvas.addEventListener("pointermove", (e) => {
 // toolbar events
 
 const form = document.querySelector("form");
-form.addEventListener("submit", (e) => {
+addEditorEventListener(form, "submit", (e) => {
   e.preventDefault();
 });
 
 const colorInput = document.querySelector("input[type=color]");
-colorInput.addEventListener("change", (e) => {
+addEditorEventListener(colorInput, "change", (e) => {
   color = e.target.value;
 });
 
@@ -205,11 +235,11 @@ const commitSizeValue = (value) => {
   updateBrushSize(normalizedValue);
 };
 
-sizeInput.addEventListener("input", (e) => {
+addEditorEventListener(sizeInput, "input", (e) => {
   commitSizeValue(e.target.value);
 });
 
-sizeInput2.addEventListener("input", (e) => {
+addEditorEventListener(sizeInput2, "input", (e) => {
   const rawValue = e.target.value;
 
   if (!validateSizeField(rawValue)) {
@@ -219,7 +249,7 @@ sizeInput2.addEventListener("input", (e) => {
   commitSizeValue(rawValue);
 });
 
-sizeInput2.addEventListener("change", (e) => {
+addEditorEventListener(sizeInput2, "change", (e) => {
   commitSizeValue(e.target.value);
 });
 
@@ -232,12 +262,12 @@ const eraserRadio = document.querySelector("input[id=eraser]");
 const eraserRadioLabel = document.querySelector("label[for=eraser]");
 brushRadioLabel.classList.toggle("active", true);
 eraserRadioLabel.classList.toggle("active", false);
-brushRadio.addEventListener("change", (e) => {
+addEditorEventListener(brushRadio, "change", (e) => {
   isEraser = false;
   brushRadioLabel.classList.toggle("active", true);
   eraserRadioLabel.classList.toggle("active", false);
 });
-eraserRadio.addEventListener("change", (e) => {
+addEditorEventListener(eraserRadio, "change", (e) => {
   isEraser = true;
   brushRadioLabel.classList.toggle("active", false);
   eraserRadioLabel.classList.toggle("active", true);
@@ -246,7 +276,7 @@ eraserRadio.addEventListener("change", (e) => {
 // save image to db
 
 const saveButton = document.querySelector("button#save");
-saveButton.addEventListener("click", () => {
+addEditorEventListener(saveButton, "click", () => {
   ifReadyDB(() => {
     canvas.toBlob((blob) => {
       if (!blob) return;
@@ -261,7 +291,7 @@ saveButton.addEventListener("click", () => {
 // download image to filesystem
 
 const downloadButton = document.querySelector("button#download");
-downloadButton.addEventListener("click", () => {
+addEditorEventListener(downloadButton, "click", () => {
   const url = canvas.toDataURL();
   const a = document.createElement("a");
   a.href = url;
@@ -280,6 +310,8 @@ const draw = (x, y) => {
 
 // render from point array
 const render = () => {
+  if (points.length === 0) return;
+
   let lColor = isEraser ? backgroundColor : color;
   ctx.beginPath();
 
@@ -326,9 +358,17 @@ const tryDraw = (e) => {
   }
 };
 
+const renderDrawing = (actions) => {
+  actions.forEach((action) => {
+    points = action.coordinates;
+    render();
+  });
+};
+
 // navigation
 
-export const showEditor = () => {
+export const showEditor = (drawingIdToLoad = null) => {
+  attachEditorListeners();
   editorPage.style.display = "flex";
 
   ctx.fillStyle = "#fff";
@@ -336,58 +376,90 @@ export const showEditor = () => {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
+  if (drawingIdToLoad !== null) {
+    loadDrawing(drawingIdToLoad);
+  }
+
   requestAnimationFrame(() => {
     sizeInput.focus({ preventScroll: true });
   });
 };
 
 export const hideEditor = () => {
+  detachEditorListeners();
+  editorLoadGeneration += 1;
+  resetEditorState();
   editorPage.style.display = "none";
 };
-
-// BE connection
-
-async function post(url, body) {
-  const response = await fetch(url, {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  return response;
-}
-
-async function patch(url, body) {
-  const response = await fetch(url, {
-    method: "PATCH",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  return response;
-}
 
 let isDrawingBeingCreated = false;
 let drawingId = null;
 
 const createDrawing = async () => {
-  const response = await post("http://localhost:8080/drawings", drawing);
+  const response = await post("/drawings", drawing);
   const json = await response.json();
   drawingId = json.id;
 };
 
+const loadDrawing = async (id) => {
+  const loadGeneration = editorLoadGeneration;
+
+  try {
+    const response = await get(`/drawings/${encodeURIComponent(id)}`);
+    const loadedDrawing = await response.json();
+
+    if (loadGeneration !== editorLoadGeneration) return;
+
+    drawing.actions = loadedDrawing.actions ?? [];
+    drawing.thumbnail = loadedDrawing.thumbnail ?? null;
+    drawingId = loadedDrawing.id;
+    renderDrawing(drawing.actions);
+  } catch (error) {
+    console.error("Could not load drawing", error);
+  }
+};
+
+const updateThumbnail = () => {
+  const thumbnail = canvas.toDataURL("image/jpeg", 0.1);
+  drawing.thumbnail = thumbnail;
+};
+
+// TODO - debounce
 const autosave = () => {
-  // TODO - debounce
+  if (drawing.actions.length === 0) {
+    return;
+  }
+  console.info("Autosave");
+  updateThumbnail();
   if (drawingId != null) {
-    patch("http://localhost:8080/drawings/" + drawingId, drawing);
+    patch(`/drawings/${drawingId}`, drawing);
   } else if (!isDrawingBeingCreated) {
     isDrawingBeingCreated = true;
     createDrawing();
   } else {
-    console.info("Waiting to create drawing on BE.");
+    console.info("Autosave - Waiting to create drawing on BE.");
   }
+};
+
+const resetEditorState = () => {
+  editorLoadGeneration += 1;
+  drawing.actions = [];
+  drawing.thumbnail = null;
+  points = [];
+  isDrawing = false;
+  isDrawingBeingCreated = false;
+  drawingId = null;
+  color = "#000000";
+  isEraser = false;
+
+  colorInput.value = color;
+  brushRadio.checked = true;
+  eraserRadio.checked = false;
+  brushRadioLabel.classList.toggle("active", true);
+  eraserRadioLabel.classList.toggle("active", false);
+  updateBrushSize(defaultSize);
+
+  ctx.fillStyle = backgroundColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  hideBrushCursor();
 };

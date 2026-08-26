@@ -110,6 +110,17 @@
   }
 }
 
+#drafts > .drafts-grid > .draft-item {
+  display: block;
+
+  & > img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+}
+
 #gallery > .gallery-grid gallery-item {
   display: block;
   position: relative;

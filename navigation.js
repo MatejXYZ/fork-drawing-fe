@@ -43,7 +43,7 @@ const getPageFromHref = (href) => {
   return url.searchParams.get("page");
 };
 
-const showPage = (page) => {
+const showPage = (page, drawingId) => {
   switch (page) {
     case "gallery":
       showGallery();
@@ -56,7 +56,7 @@ const showPage = (page) => {
       hideGallery();
       break;
     default:
-      showEditor();
+      showEditor(drawingId);
       hideGallery();
       hideDrafts();
   }
@@ -65,7 +65,7 @@ const showPage = (page) => {
 const route = () => {
   const params = new URLSearchParams(window.location.search);
   const page = params.get("page");
-  showPage(page);
+  showPage(page, params.get("drawingId"));
 
   updateActiveLink(page);
 };

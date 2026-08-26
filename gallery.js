@@ -1,4 +1,5 @@
 import { showSuccessFeedback } from "./toast.js";
+import { get } from "./api.js";
 
 // elements
 
@@ -282,18 +283,7 @@ export const showGallery = () => {
     return;
   }
 
-  loadImages((id, url) => {
-    const item = document.createElement("img");
-    const alt = `Illustration ${id}`;
-    galleryUrls.push(url);
-    item.setAttribute("src", url);
-    item.setAttribute("alt", alt);
-
-    item.classList.add("gallery-modal__image");
-
-    container.appendChild(item);
-    syncEmptyState();
-  });
+  loadImages();
 };
 
 export const hideGallery = () => {
@@ -305,14 +295,22 @@ export const hideGallery = () => {
   container.innerHTML = "";
 };
 
-// DB connection mock
+const loadImages = async () => {
+  try {
+    const response = await get("/drawings?published=true");
+    const drawings = await response.json();
 
-const loadImages = (handleImage) => {
-  const images = [
-    {
-      id: 0,
-      url: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages8.alphacoders.com%2F407%2F407173.jpg&f=1&nofb=1&ipt=46609d734b6d488f2dce38766e2687d81672c30fb5b942b97cce5dfd6d9f8ab3",
-    },
-  ];
-  images.forEach((image) => handleImage(image.id, image.url));
+    drawings.forEach(({ id, thumbnail }) => {
+      const item = document.createElement("gallery-item");
+      const alt = `Illustration ${id}`;
+
+      galleryUrls.push(thumbnail);
+      item.data = { id, url: thumbnail, alt };
+      container.appendChild(item);
+    });
+
+    syncEmptyState();
+  } catch (error) {
+    console.error("Could not load gallery", error);
+  }
 };
