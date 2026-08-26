@@ -1,5 +1,5 @@
 import { showSuccessFeedback } from "./toast.js";
-import { get } from "./api.js";
+import { del, get } from "./api.js";
 
 // elements
 
@@ -82,7 +82,12 @@ class GalleryModal {
   }
 
   handleOpenImage(event) {
-    this.open(event.detail.item, event.detail.url, event.detail.alt);
+    const url = new URL(window.location.href);
+    url.searchParams.set("page", "detail");
+    url.searchParams.set("drawingId", event.detail.item.imageId);
+    url.searchParams.set("source", "published");
+    history.pushState("", "", url);
+    window.dispatchEvent(new PopStateEvent("popstate"));
   }
   handleDialogClick(event) {
     if (event.target === this.dialog) {
@@ -240,23 +245,25 @@ class GalleryItem extends HTMLElement {
   };
 
   deleteImage = (ondone) => {
-    deleteImageFromDB(this.imageId, () => {
-      const urlIndex = galleryUrls.indexOf(this.imageUrl);
+    del(`/drawings/${encodeURIComponent(this.imageId)}`)
+      .then(() => {
+        const urlIndex = galleryUrls.indexOf(this.imageUrl);
 
-      URL.revokeObjectURL(this.imageUrl);
+        URL.revokeObjectURL(this.imageUrl);
 
-      if (urlIndex !== -1) {
-        galleryUrls.splice(urlIndex, 1);
-      }
+        if (urlIndex !== -1) {
+          galleryUrls.splice(urlIndex, 1);
+        }
 
-      this.remove();
-      syncEmptyState();
-      showSuccessFeedback("Deleted image");
+        this.remove();
+        syncEmptyState();
+        showSuccessFeedback("Deleted image");
 
-      if (ondone) {
-        ondone();
-      }
-    });
+        if (ondone) {
+          ondone();
+        }
+      })
+      .catch((error) => console.error("Could not delete image", error));
   };
 
   sync() {

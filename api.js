@@ -29,3 +29,8 @@ export const patch = (url, body) =>
       "Content-Type": "application/json",
     },
   });
+
+export const del = (url) =>
+  request(url, {
+    method: "DELETE",
+  });

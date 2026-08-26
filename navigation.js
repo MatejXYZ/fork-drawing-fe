@@ -1,6 +1,7 @@
 import { hideEditor, showEditor } from "./editor.js";
 import { hideDrafts, showDrafts } from "./drafts.js";
 import { hideGallery, showGallery } from "./gallery.js";
+import { hideDetail, showDetail } from "./detail.js";
 
 // navbar
 
@@ -19,6 +20,11 @@ const toggleActiveOff = (el) => {
 const updateActiveLink = (page) => {
   switch (page) {
     case "gallery":
+      toggleActiveOn(galleryLink);
+      toggleActiveOff(editorLink);
+      toggleActiveOff(draftsLink);
+      break;
+    case "detail":
       toggleActiveOn(galleryLink);
       toggleActiveOff(editorLink);
       toggleActiveOff(draftsLink);
@@ -49,16 +55,25 @@ const showPage = (page) => {
       showGallery();
       hideEditor();
       hideDrafts();
+      hideDetail();
       break;
     case "drafts":
       showDrafts();
       hideEditor();
       hideGallery();
+      hideDetail();
+      break;
+    case "detail":
+      showDetail();
+      hideEditor();
+      hideGallery();
+      hideDrafts();
       break;
     default:
       showEditor();
       hideGallery();
       hideDrafts();
+      hideDetail();
   }
 };
 

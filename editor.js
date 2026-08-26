@@ -1,5 +1,5 @@
 import { showSuccessFeedback } from "./toast.js";
-import { get, patch, post } from "./api.js";
+import { del, get, patch, post } from "./api.js";
 
 const editorPage = document.querySelector("#editor");
 const editorListeners = [];
@@ -152,7 +152,12 @@ addEditorEventListener(canvas, "pointerdown", (e) => {
   tryDraw(e);
 });
 addEditorEventListener(document, "pointerup", (e) => {
-  canvas.releasePointerCapture(e.pointerId);
+  if (!isDrawing) return;
+
+  if (canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+
   if (points.length > 0) {
     drawing.actions.push({
       coordinates: points,
@@ -160,6 +165,7 @@ addEditorEventListener(document, "pointerup", (e) => {
       size: brushSize,
     });
   }
+  points = [];
   autosave();
   isDrawing = false;
 });
@@ -282,21 +288,6 @@ addEditorEventListener(eraserRadio, "change", (e) => {
   eraserRadioLabel.classList.toggle("active", true);
 });
 
-// save image to db
-
-const saveButton = document.querySelector("button#save");
-addEditorEventListener(saveButton, "click", () => {
-  ifReadyDB(() => {
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-
-      saveBlobToDB(blob, () => {
-        showSuccessFeedback("Saved to gallery");
-      });
-    });
-  });
-});
-
 // download image to filesystem
 
 const downloadButton = document.querySelector("button#download");
@@ -310,6 +301,41 @@ addEditorEventListener(downloadButton, "click", () => {
   showSuccessFeedback("Download started");
 });
 
+const publishButton = document.querySelector("button#publish");
+addEditorEventListener(publishButton, "click", async () => {
+  if (drawing.actions.length === 0) return;
+
+  publishButton.disabled = true;
+  try {
+    updateThumbnail();
+    const id = await ensureDrawingSaved();
+    await patch(`/drawings/${encodeURIComponent(id)}`, {
+      ...drawing,
+      isPublished: true,
+    });
+    showSuccessFeedback("Published drawing");
+    window.location.href = `?page=detail&drawingId=${encodeURIComponent(id)}&source=published`;
+  } catch (error) {
+    console.error("Could not publish drawing", error);
+    publishButton.disabled = false;
+  }
+});
+
+const deleteButton = document.querySelector("button#delete");
+addEditorEventListener(deleteButton, "click", async () => {
+  const id = getDrawingIdFromUrl();
+  if (!id) return;
+
+  deleteButton.disabled = true;
+  try {
+    await del(`/drawings/${encodeURIComponent(id)}`);
+    window.location.href = "?page=gallery";
+  } catch (error) {
+    console.error("Could not delete drawing", error);
+    deleteButton.disabled = false;
+  }
+});
+
 // drawing
 
 // logical draw
@@ -318,24 +344,31 @@ const draw = (x, y) => {
 };
 
 // render from point array
-const render = () => {
+const render = (settings) => {
   if (points.length === 0) return;
 
   let lColor = isEraser ? backgroundColor : color;
+  let lSize = brushSize;
+
+  if (settings) {
+    lColor = settings.color;
+    lSize = settings.size;
+  }
+
   ctx.beginPath();
 
   if (points.length == 1) {
     ctx.fillStyle = lColor;
     ctx.arc(
       ...getCoordinates(points[0].x, points[0].y),
-      brushSize / 2,
+      lSize / 2,
       0,
       Math.PI * 2,
     );
     ctx.fill();
   } else {
     ctx.strokeStyle = lColor;
-    ctx.lineWidth = brushSize;
+    ctx.lineWidth = lSize;
     ctx.moveTo(...getCoordinates(points[0].x, points[0].y));
 
     if (points.length == 2) {
@@ -363,23 +396,16 @@ const tryDraw = (e) => {
   if (isDrawing) {
     draw(e.clientX - rect.left, e.clientY - rect.top);
 
-    requestAnimationFrame(render);
+    requestAnimationFrame(() => render());
   }
 };
 
 const renderDrawing = (actions) => {
-  const tmpColor = color;
-  const tmpBrushSize = brushSize;
-
   actions.forEach((action) => {
     points = action.coordinates;
-    color = action.color;
-    brushSize = action.size;
-    render();
+    render({ color: action.color, size: action.size });
   });
 
-  color = tmpColor;
-  brushSize = tmpBrushSize;
   redrawBrushCursor();
 };
 
@@ -420,6 +446,14 @@ const createDrawing = async () => {
   const url = new URL(window.location.href);
   url.searchParams.set("drawingId", json.id);
   history.replaceState("", "", url);
+  return json.id;
+};
+
+const ensureDrawingSaved = async () => {
+  const id = getDrawingIdFromUrl();
+  if (id) return id;
+
+  return createDrawing();
 };
 
 // BE connection
