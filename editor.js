@@ -149,7 +149,11 @@ addEditorEventListener(canvas, "pointerdown", (e) => {
 addEditorEventListener(document, "pointerup", (e) => {
   canvas.releasePointerCapture(e.pointerId);
   if (points.length > 0) {
-    drawing.actions.push({ coordinates: points });
+    drawing.actions.push({
+      coordinates: points,
+      color: color,
+      size: brushSize,
+    });
   }
   autosave();
   isDrawing = false;
@@ -361,6 +365,8 @@ const tryDraw = (e) => {
 const renderDrawing = (actions) => {
   actions.forEach((action) => {
     points = action.coordinates;
+    color = action.color;
+    brushSize = action.size;
     render();
   });
 };
@@ -400,6 +406,8 @@ const createDrawing = async () => {
   const json = await response.json();
   drawingId = json.id;
 };
+
+// BE connection
 
 const loadDrawing = async (id) => {
   const loadGeneration = editorLoadGeneration;
