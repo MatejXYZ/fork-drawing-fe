@@ -121,7 +121,12 @@ handleWindowResize();
 // drawing
 
 let isDrawing = false;
-let editorLoadGeneration = 0;
+let editorSessionGeneration = 0;
+
+const getDrawingIdFromUrl = () => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("drawingId");
+};
 
 // fn that calculates coordinates to scale
 const getCoordinates = (x, y) => {
@@ -363,27 +368,34 @@ const tryDraw = (e) => {
 };
 
 const renderDrawing = (actions) => {
+  const tmpColor = color;
+  const tmpBrushSize = brushSize;
+
   actions.forEach((action) => {
     points = action.coordinates;
     color = action.color;
     brushSize = action.size;
     render();
   });
+
+  color = tmpColor;
+  brushSize = tmpBrushSize;
+  redrawBrushCursor();
 };
 
 // navigation
 
-export const showEditor = (drawingIdToLoad = null) => {
+export const showEditor = () => {
+  resetEditorState();
   attachEditorListeners();
   editorPage.style.display = "flex";
 
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, 1000, 1000);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  if (drawingIdToLoad !== null) {
-    loadDrawing(drawingIdToLoad);
+  const drawingIdFromUrl = getDrawingIdFromUrl();
+  if (drawingIdFromUrl !== null) {
+    loadDrawing(drawingIdFromUrl);
   }
 
   requestAnimationFrame(() => {
@@ -393,34 +405,36 @@ export const showEditor = (drawingIdToLoad = null) => {
 
 export const hideEditor = () => {
   detachEditorListeners();
-  editorLoadGeneration += 1;
   resetEditorState();
   editorPage.style.display = "none";
 };
 
 let isDrawingBeingCreated = false;
-let drawingId = null;
 
 const createDrawing = async () => {
+  const sessionGeneration = editorSessionGeneration;
   const response = await post("/drawings", drawing);
   const json = await response.json();
-  drawingId = json.id;
+  if (sessionGeneration !== editorSessionGeneration) return;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("drawingId", json.id);
+  history.replaceState("", "", url);
 };
 
 // BE connection
 
 const loadDrawing = async (id) => {
-  const loadGeneration = editorLoadGeneration;
-
   try {
     const response = await get(`/drawings/${encodeURIComponent(id)}`);
     const loadedDrawing = await response.json();
 
-    if (loadGeneration !== editorLoadGeneration) return;
+    if (getDrawingIdFromUrl() !== id || String(loadedDrawing.id) !== id) {
+      return;
+    }
 
     drawing.actions = loadedDrawing.actions ?? [];
     drawing.thumbnail = loadedDrawing.thumbnail ?? null;
-    drawingId = loadedDrawing.id;
     renderDrawing(drawing.actions);
   } catch (error) {
     console.error("Could not load drawing", error);
@@ -439,8 +453,9 @@ const autosave = () => {
   }
   console.info("Autosave");
   updateThumbnail();
-  if (drawingId != null) {
-    patch(`/drawings/${drawingId}`, drawing);
+  const drawingIdFromUrl = getDrawingIdFromUrl();
+  if (drawingIdFromUrl != null) {
+    patch(`/drawings/${encodeURIComponent(drawingIdFromUrl)}`, drawing);
   } else if (!isDrawingBeingCreated) {
     isDrawingBeingCreated = true;
     createDrawing();
@@ -450,13 +465,12 @@ const autosave = () => {
 };
 
 const resetEditorState = () => {
-  editorLoadGeneration += 1;
+  editorSessionGeneration += 1;
   drawing.actions = [];
   drawing.thumbnail = null;
   points = [];
   isDrawing = false;
   isDrawingBeingCreated = false;
-  drawingId = null;
   color = "#000000";
   isEraser = false;
 
