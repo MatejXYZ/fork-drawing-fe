@@ -30,11 +30,40 @@
 
 .detail-view {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 60vh;
   position: relative;
+}
+
+.detail-fork-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(80vw, 800px);
+  margin-bottom: 16px;
+}
+
+.detail-fork-form label {
+  color: var(--text);
+  font-weight: bold;
+}
+
+.detail-fork-form input {
+  width: 140px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.detail-fork-form button {
+  padding: 8px 12px;
+  font-size: 16px;
 }
 
 .detail-canvas {
@@ -58,5 +87,10 @@
   }
   .detail-canvas {
     width: 100%;
+  }
+
+  .detail-fork-form {
+    width: 100%;
+    flex-wrap: wrap;
   }
 }

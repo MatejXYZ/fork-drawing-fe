@@ -97,6 +97,12 @@
             </div>
             <p class="detail-empty">Drawing not found.</p>
             <div class="detail-view">
+                <form class="detail-fork-form">
+                    <label for="fork-point">Fork point</label>
+                    <input id="fork-point" type="number" min="1" step="1" required inputmode="numeric"
+                        placeholder="Action number">
+                    <button type="submit" id="fork">Fork</button>
+                </form>
                 <canvas class="detail-canvas" width="1000" height="1000" aria-label="Drawing replay"></canvas>
             </div>
         </section>

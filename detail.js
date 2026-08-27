@@ -1,9 +1,13 @@
-import { get } from "./api.js";
+import { get, post } from "./api.js";
+import { showSuccessFeedback } from "./toast.js";
 import { clearCanvas, renderActions } from "./drawing-renderer.js";
 
 const section = document.querySelector("#detail");
 const canvas = section.querySelector(".detail-canvas");
 const emptyState = section.querySelector(".detail-empty");
+const forkForm = section.querySelector(".detail-fork-form");
+const forkPointInput = section.querySelector("#fork-point");
+const forkButton = section.querySelector("#fork");
 
 let drawings = [];
 let currentIndex = -1;
@@ -34,6 +38,9 @@ const render = (index) => {
 
   emptyState.hidden = hasDrawing;
   canvas.hidden = !hasDrawing;
+  forkForm.hidden = !hasDrawing;
+  forkPointInput.value = "";
+  forkButton.disabled = !hasDrawing;
 
   if (!hasDrawing) {
     clearCanvas(canvas.getContext("2d"));
@@ -43,6 +50,31 @@ const render = (index) => {
   canvas.setAttribute("aria-label", `Illustration ${drawing.id}`);
   renderActions(canvas, drawing.actions ?? []);
 };
+
+forkForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!forkPointInput.reportValidity()) return;
+
+  const drawing = drawings[currentIndex];
+  const forkPoint = Number(forkPointInput.value);
+  if (!drawing || !Number.isInteger(forkPoint) || forkPoint < 1) return;
+
+  forkButton.disabled = true;
+  try {
+    const { id, ...forkedDrawing } = drawing;
+    const response = await post("/drawings", {
+      ...forkedDrawing,
+      parentId: id,
+      forkPoint,
+    });
+    const fork = await response.json();
+    showSuccessFeedback("Forked drawing");
+    window.location.href = `?page=detail&drawingId=${encodeURIComponent(fork.id)}&source=${encodeURIComponent(getSource())}`;
+  } catch (error) {
+    console.error("Could not fork drawing", error);
+    forkButton.disabled = false;
+  }
+});
 
 const loadDetail = async () => {
   try {
