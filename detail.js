@@ -1,7 +1,8 @@
 import { get } from "./api.js";
+import { clearCanvas, renderActions } from "./drawing-renderer.js";
 
 const section = document.querySelector("#detail");
-const image = section.querySelector(".detail-image");
+const canvas = section.querySelector(".detail-canvas");
 const emptyState = section.querySelector(".detail-empty");
 
 let drawings = [];
@@ -32,15 +33,15 @@ const render = (index) => {
   const hasDrawing = Boolean(drawing);
 
   emptyState.hidden = hasDrawing;
-  image.hidden = !hasDrawing;
+  canvas.hidden = !hasDrawing;
 
   if (!hasDrawing) {
-    image.removeAttribute("src");
+    clearCanvas(canvas.getContext("2d"));
     return;
   }
 
-  image.src = drawing.image || drawing.thumbnail;
-  image.alt = `Illustration ${drawing.id}`;
+  canvas.setAttribute("aria-label", `Illustration ${drawing.id}`);
+  renderActions(canvas, drawing.actions ?? []);
 };
 
 const loadDetail = async () => {
@@ -50,6 +51,14 @@ const loadDetail = async () => {
     const index = drawings.findIndex(
       (drawing) => String(drawing.id) === getDrawingId(),
     );
+
+    if (index !== -1 && !Array.isArray(drawings[index].actions)) {
+      const response = await get(
+        `/drawings/${encodeURIComponent(drawings[index].id)}`,
+      );
+      drawings[index] = await response.json();
+    }
+
     render(index);
   } catch (error) {
     drawings = [];
@@ -79,5 +88,5 @@ export const showDetail = () => {
 export const hideDetail = () => {
   section.style.display = "none";
   section.classList.add("hidden");
-  image.removeAttribute("src");
+  clearCanvas(canvas.getContext("2d"));
 };

@@ -1,5 +1,11 @@
 import { showSuccessFeedback } from "./toast.js";
 import { del, get, patch, post } from "./api.js";
+import {
+  BACKGROUND_COLOR,
+  getCanvasScale,
+  renderAction,
+  renderActions,
+} from "./drawing-renderer.js";
 
 const editorPage = document.querySelector("#editor");
 const editorListeners = [];
@@ -37,7 +43,7 @@ const drawing = {
 
 // config
 
-const backgroundColor = "#fff";
+const backgroundColor = BACKGROUND_COLOR;
 let scale = 2;
 let brushSize = 25;
 let color = "#000000";
@@ -110,7 +116,7 @@ const hideBrushCursor = () => {
 // after resize update scale for operations with coordinates
 const handleWindowResize = () => {
   rect = canvas.getBoundingClientRect();
-  scale = 1000 / rect.width; // default canvas is 1000x1000
+  scale = getCanvasScale(canvas);
   redrawBrushCursor();
 };
 
@@ -126,11 +132,6 @@ let editorSessionGeneration = 0;
 const getDrawingIdFromUrl = () => {
   const params = new URLSearchParams(window.location.search);
   return params.get("drawingId");
-};
-
-// fn that calculates coordinates to scale
-const getCoordinates = (x, y) => {
-  return [x * scale, y * scale];
 };
 
 let points = []; // list of coordinates in a single action
@@ -288,19 +289,6 @@ addEditorEventListener(eraserRadio, "change", (e) => {
   eraserRadioLabel.classList.toggle("active", true);
 });
 
-// download image to filesystem
-
-const downloadButton = document.querySelector("button#download");
-addEditorEventListener(downloadButton, "click", () => {
-  const url = canvas.toDataURL();
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = new Date(Date.now()).toISOString() + ".png";
-  a.click();
-  a.remove();
-  showSuccessFeedback("Download started");
-});
-
 const publishButton = document.querySelector("button#publish");
 addEditorEventListener(publishButton, "click", async () => {
   if (drawing.actions.length === 0) return;
@@ -340,54 +328,17 @@ addEditorEventListener(deleteButton, "click", async () => {
 
 // logical draw
 const draw = (x, y) => {
-  points.push({ x, y });
+  points.push({ x: x * scale, y: y * scale });
+  console.info(`Drawn point at (${x * scale}, ${y * scale})`);
 };
 
 // render from point array
 const render = (settings) => {
-  if (points.length === 0) return;
-
-  let lColor = isEraser ? backgroundColor : color;
-  let lSize = brushSize;
-
-  if (settings) {
-    lColor = settings.color;
-    lSize = settings.size;
-  }
-
-  ctx.beginPath();
-
-  if (points.length == 1) {
-    ctx.fillStyle = lColor;
-    ctx.arc(
-      ...getCoordinates(points[0].x, points[0].y),
-      lSize / 2,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  } else {
-    ctx.strokeStyle = lColor;
-    ctx.lineWidth = lSize;
-    ctx.moveTo(...getCoordinates(points[0].x, points[0].y));
-
-    if (points.length == 2) {
-      ctx.lineTo(...getCoordinates(points[0].x, points[0].y));
-    } else if (points.length > 2) {
-      for (let i = 1; i < points.length - 1; i++) {
-        const midX = (points[i].x + points[i + 1].x) / 2;
-        const midY = (points[i].y + points[i + 1].y) / 2;
-
-        // curve to avoid jagged lines when drawing fast
-        ctx.quadraticCurveTo(
-          ...getCoordinates(points[i].x, points[i].y),
-          ...getCoordinates(midX, midY),
-        );
-      }
-    }
-
-    ctx.stroke();
-  }
+  renderAction(ctx, {
+    coordinates: points,
+    color: isEraser ? backgroundColor : (settings?.color ?? color),
+    size: settings?.size ?? brushSize,
+  });
 };
 
 // draw if app logic allows, render
@@ -401,10 +352,7 @@ const tryDraw = (e) => {
 };
 
 const renderDrawing = (actions) => {
-  actions.forEach((action) => {
-    points = action.coordinates;
-    render({ color: action.color, size: action.size });
-  });
+  renderActions(canvas, actions);
 
   redrawBrushCursor();
 };
@@ -415,6 +363,7 @@ export const showEditor = () => {
   resetEditorState();
   attachEditorListeners();
   editorPage.style.display = "flex";
+  handleWindowResize();
 
   ctx.lineCap = "round";
   ctx.lineJoin = "round";

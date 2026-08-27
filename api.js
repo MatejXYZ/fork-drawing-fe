@@ -1,4 +1,4 @@
-export const BE_DOMAIN = "http://localhost:8080";
+export const BE_DOMAIN = "http://10.0.0.9:8080";
 
 const request = async (url, options = {}) => {
   const response = await fetch(`${BE_DOMAIN}${url}`, options);
