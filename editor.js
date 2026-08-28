@@ -351,8 +351,8 @@ const tryDraw = (e) => {
   }
 };
 
-const renderDrawing = (actions) => {
-  renderActions(canvas, actions);
+const renderDrawing = (actions, parentActions = []) => {
+  renderActions(canvas, [...parentActions, ...actions]);
 
   redrawBrushCursor();
 };
@@ -409,7 +409,9 @@ const ensureDrawingSaved = async () => {
 
 const loadDrawing = async (id) => {
   try {
-    const response = await get(`/drawings/${encodeURIComponent(id)}`);
+    const response = await get(
+      `/drawings/${encodeURIComponent(id)}?parent=true`,
+    );
     const loadedDrawing = await response.json();
 
     if (getDrawingIdFromUrl() !== id || String(loadedDrawing.id) !== id) {
@@ -418,7 +420,7 @@ const loadDrawing = async (id) => {
 
     drawing.actions = loadedDrawing.actions ?? [];
     drawing.thumbnail = loadedDrawing.thumbnail ?? null;
-    renderDrawing(drawing.actions);
+    renderDrawing(drawing.actions, loadedDrawing.parentActions);
   } catch (error) {
     console.error("Could not load drawing", error);
   }

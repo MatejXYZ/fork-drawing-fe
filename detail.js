@@ -48,7 +48,10 @@ const render = (index) => {
   }
 
   canvas.setAttribute("aria-label", `Illustration ${drawing.id}`);
-  renderActions(canvas, drawing.actions ?? []);
+  renderActions(canvas, [
+    ...(drawing.parentActions ?? []),
+    ...(drawing.actions ?? []),
+  ]);
 };
 
 forkForm.addEventListener("submit", async (event) => {
@@ -61,7 +64,7 @@ forkForm.addEventListener("submit", async (event) => {
 
   forkButton.disabled = true;
   try {
-    const { id, ...forkedDrawing } = drawing;
+    const { id, parentActions, parentMap, ...forkedDrawing } = drawing;
     const response = await post("/drawings", {
       ...forkedDrawing,
       parentId: id,
@@ -84,9 +87,9 @@ const loadDetail = async () => {
       (drawing) => String(drawing.id) === getDrawingId(),
     );
 
-    if (index !== -1 && !Array.isArray(drawings[index].actions)) {
+    if (index !== -1) {
       const response = await get(
-        `/drawings/${encodeURIComponent(drawings[index].id)}`,
+        `/drawings/${encodeURIComponent(drawings[index].id)}?parent=true`,
       );
       drawings[index] = await response.json();
     }
