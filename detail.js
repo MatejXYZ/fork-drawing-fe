@@ -150,7 +150,7 @@ forkForm.addEventListener("submit", async (event) => {
     });
     const fork = await response.json();
     showSuccessFeedback("Forked drawing");
-    window.location.href = `?page=detail&drawingId=${encodeURIComponent(fork.id)}&source=${encodeURIComponent(getSource())}`;
+    window.location.href = `?page=index&drawingId=${encodeURIComponent(fork.id)}&source=${encodeURIComponent(getSource())}`;
   } catch (error) {
     console.error("Could not fork drawing", error);
     forkButton.disabled = false;
