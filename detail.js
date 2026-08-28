@@ -111,10 +111,11 @@ forkPointInput.addEventListener("input", () => {
   if (!drawing) return;
 
   forkPointValue.value = forkPointInput.value;
-  renderActions(canvas, [
-    ...(drawing.parentActions ?? []),
-    ...(drawing.actions ?? []),
-  ], Number(forkPointInput.value));
+  renderActions(
+    canvas,
+    [...(drawing.parentActions ?? []), ...(drawing.actions ?? [])],
+    Number(forkPointInput.value),
+  );
 });
 
 forkForm.addEventListener("submit", async (event) => {
