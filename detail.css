@@ -52,13 +52,50 @@
 }
 
 .detail-fork-form input {
-  width: 140px;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+  cursor: pointer;
+}
+
+.detail-history-slider {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: 24px 12px;
+  align-items: center;
+  gap: 0 12px;
+}
+
+.detail-history-slider input[type="range"] {
+  width: 100%;
+  grid-column: 1;
+  grid-row: 1;
+  accent-color: var(--primary);
+}
+
+.detail-history-ticks {
+  display: flex;
+  justify-content: space-between;
+  grid-column: 1;
+  grid-row: 2;
+  height: 12px;
+  padding: 0 7px;
+}
+
+.detail-history-tick {
+  width: 1px;
+  height: 5px;
+  background: var(--muted);
+}
+
+.detail-history-tick--drawing {
+  height: 12px;
+  background: var(--primary);
+}
+
+.detail-history-slider output {
+  min-width: 2ch;
   color: var(--text);
-  font-size: 16px;
+  font-weight: bold;
+  text-align: right;
 }
 
 .detail-fork-form button {
@@ -92,5 +129,9 @@
   .detail-fork-form {
     width: 100%;
     flex-wrap: wrap;
+  }
+
+  .detail-history-slider {
+    min-width: 0;
   }
 }

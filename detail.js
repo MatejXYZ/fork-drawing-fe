@@ -7,6 +7,8 @@ const canvas = section.querySelector(".detail-canvas");
 const emptyState = section.querySelector(".detail-empty");
 const forkForm = section.querySelector(".detail-fork-form");
 const forkPointInput = section.querySelector("#fork-point");
+const forkPointValue = section.querySelector("#fork-point-value");
+const historyTicks = section.querySelector(".detail-history-ticks");
 const forkButton = section.querySelector("#fork");
 
 let drawings = [];
@@ -18,6 +20,55 @@ const getSource = () =>
   new URLSearchParams(window.location.search).get("source") || "published";
 const getListUrl = (source) =>
   source === "published" ? "/drawings?published=true" : source;
+
+const getHistorySegments = (drawing) => {
+  const segments = [];
+  let historyLength = 0;
+
+  Object.entries(drawing.parentMap ?? {}).forEach(([id, cutoff]) => {
+    const length = Math.max(0, Number(cutoff) || 0);
+    if (length === 0) return;
+    segments.push({
+      id,
+      start: historyLength + 1,
+      end: historyLength + length,
+    });
+    historyLength += length;
+  });
+
+  const actionsLength = (drawing.actions ?? []).length;
+  if (actionsLength > 0) {
+    segments.push({
+      id: drawing.id,
+      start: historyLength + 1,
+      end: historyLength + actionsLength,
+    });
+  }
+
+  return segments;
+};
+
+const renderHistorySlider = (drawing) => {
+  const segments = getHistorySegments(drawing);
+  const historyLength = segments.at(-1)?.end ?? 0;
+
+  forkPointInput.max = String(Math.max(1, historyLength));
+  forkPointInput.value = String(Math.max(1, historyLength));
+  forkPointInput.disabled = historyLength === 0;
+  forkPointValue.value = forkPointInput.value;
+  historyTicks.replaceChildren();
+
+  for (let point = 1; point <= historyLength; point++) {
+    const tick = document.createElement("span");
+    tick.className = "detail-history-tick";
+    if (segments.some((segment) => segment.end === point)) {
+      tick.classList.add("detail-history-tick--drawing");
+    }
+    historyTicks.append(tick);
+  }
+
+  return segments;
+};
 
 const navigateToIndex = (index) => {
   const drawing = drawings[index];
@@ -39,7 +90,6 @@ const render = (index) => {
   emptyState.hidden = hasDrawing;
   canvas.hidden = !hasDrawing;
   forkForm.hidden = !hasDrawing;
-  forkPointInput.value = "";
   forkButton.disabled = !hasDrawing;
 
   if (!hasDrawing) {
@@ -48,26 +98,43 @@ const render = (index) => {
   }
 
   canvas.setAttribute("aria-label", `Illustration ${drawing.id}`);
+  const actions = [
+    ...(drawing.parentActions ?? []),
+    ...(drawing.actions ?? []),
+  ];
+  renderHistorySlider(drawing);
+  renderActions(canvas, actions, Number(forkPointInput.value));
+};
+
+forkPointInput.addEventListener("input", () => {
+  const drawing = drawings[currentIndex];
+  if (!drawing) return;
+
+  forkPointValue.value = forkPointInput.value;
   renderActions(canvas, [
     ...(drawing.parentActions ?? []),
     ...(drawing.actions ?? []),
-  ]);
-};
+  ], Number(forkPointInput.value));
+});
 
 forkForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!forkPointInput.reportValidity()) return;
-
   const drawing = drawings[currentIndex];
-  const forkPoint = Number(forkPointInput.value);
-  if (!drawing || !Number.isInteger(forkPoint) || forkPoint < 1) return;
+  const globalForkPoint = Number(forkPointInput.value);
+  const segments = drawing && getHistorySegments(drawing);
+  const segment = segments?.find(
+    ({ start, end }) => globalForkPoint >= start && globalForkPoint <= end,
+  );
+  if (!drawing || !segment) return;
+
+  const forkPoint = globalForkPoint - segment.start + 1;
 
   forkButton.disabled = true;
   try {
-    const { id, parentActions, parentMap, ...forkedDrawing } = drawing;
+    const { parentActions, parentMap, ...forkedDrawing } = drawing;
     const response = await post("/drawings", {
       ...forkedDrawing,
-      parentId: id,
+      parentId: segment.id,
       forkPoint,
     });
     const fork = await response.json();
