@@ -70,13 +70,23 @@ const renderHistorySlider = (drawing) => {
   return segments;
 };
 
-const navigateToIndex = (index) => {
+const navigateToIndex = async (index) => {
   const drawing = drawings[index];
   if (!drawing) return;
 
+  try {
+    const response = await get(
+      `/drawings/${encodeURIComponent(drawing.id)}?parent=true`,
+    );
+    drawings[index] = await response.json();
+  } catch (error) {
+    console.error("Could not load adjacent drawing detail", error);
+    return;
+  }
+
   const url = new URL(window.location.href);
   url.searchParams.set("page", "detail");
-  url.searchParams.set("drawingId", drawing.id);
+  url.searchParams.set("drawingId", drawings[index].id);
   url.searchParams.set("source", getSource());
   history.pushState("", "", url);
   render(index);
