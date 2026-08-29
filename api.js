@@ -1,4 +1,7 @@
-export const BE_DOMAIN = "http://10.0.0.9:8080";
+const LOCAL_BE_HOSTS = ["10.0.0.9", "127.0.0.1", "localhost"];
+export const BE_DOMAIN = LOCAL_BE_HOSTS.includes(window.location.hostname)
+  ? "http://10.0.0.9:8080"
+  : "https://fork-drawing.onrender.com";
 
 const request = async (url, options = {}) => {
   const response = await fetch(`${BE_DOMAIN}${url}`, options);
