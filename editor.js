@@ -8,6 +8,7 @@ import {
 } from "./drawing-renderer.js";
 
 const editorPage = document.querySelector("#editor");
+const autosaveStatus = document.querySelector("#autosave-status");
 const editorListeners = [];
 let editorListenersAttached = true;
 
@@ -395,6 +396,7 @@ const createDrawing = async () => {
   const url = new URL(window.location.href);
   url.searchParams.set("drawingId", json.id);
   history.replaceState("", "", url);
+  showAutosaveMessage();
   return json.id;
 };
 
@@ -403,6 +405,21 @@ const ensureDrawingSaved = async () => {
   if (id) return id;
 
   return createDrawing();
+};
+
+const showAutosaveMessage = (message = "Saved automatically") => {
+  if (!autosaveStatus) return;
+
+  const label = autosaveStatus.querySelector("span");
+  if (label) {
+    label.textContent = message;
+  }
+
+  autosaveStatus.hidden = false;
+  window.clearTimeout(autosaveStatus.hideTimer);
+  autosaveStatus.hideTimer = window.setTimeout(() => {
+    autosaveStatus.hidden = true;
+  }, 2500);
 };
 
 // BE connection
@@ -432,7 +449,7 @@ const updateThumbnail = () => {
 };
 
 // TODO - debounce
-const autosave = () => {
+const autosave = async () => {
   if (drawing.actions.length === 0) {
     return;
   }
@@ -440,10 +457,11 @@ const autosave = () => {
   updateThumbnail();
   const drawingIdFromUrl = getDrawingIdFromUrl();
   if (drawingIdFromUrl != null) {
-    patch(`/drawings/${encodeURIComponent(drawingIdFromUrl)}`, drawing);
+    await patch(`/drawings/${encodeURIComponent(drawingIdFromUrl)}`, drawing);
+    showAutosaveMessage();
   } else if (!isDrawingBeingCreated) {
     isDrawingBeingCreated = true;
-    createDrawing();
+    await createDrawing();
   } else {
     console.info("Autosave - Waiting to create drawing on BE.");
   }
@@ -458,6 +476,11 @@ const resetEditorState = () => {
   isDrawingBeingCreated = false;
   color = "#000000";
   isEraser = false;
+
+  if (autosaveStatus) {
+    autosaveStatus.hidden = true;
+    window.clearTimeout(autosaveStatus.hideTimer);
+  }
 
   colorInput.value = color;
   brushRadio.checked = true;

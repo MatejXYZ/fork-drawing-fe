@@ -1,3 +1,10 @@
+.canvas-shell {
+  position: relative;
+  width: 100%;
+  max-width: 650px;
+  display: inline-block;
+}
+
 canvas {
   width: 100%;
   touch-action: none;
@@ -5,10 +12,37 @@ canvas {
   overscroll-behavior: contain;
   max-width: 650px;
   cursor: none;
+  display: block;
 
   box-shadow:
     0 0 4px 1px rgba(255, 255, 255, 0.1),
     0 0 16px 1px black;
+}
+
+.canvas-status {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #2e7d32;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.canvas-status[hidden] {
+  display: none;
+}
+
+.canvas-status svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 #cursor {
