@@ -44,11 +44,11 @@ const drawing = {
 // config
 
 const backgroundColor = BACKGROUND_COLOR;
+const defaultBrushSize = 10;
 let scale = 2;
-let brushSize = 25;
+let brushSize = defaultBrushSize;
 let color = "#000000";
 let isEraser = false;
-const defaultSize = 25;
 
 // canvas init
 
@@ -269,7 +269,7 @@ addEditorEventListener(sizeInput2, "change", (e) => {
   commitSizeValue(e.target.value);
 });
 
-updateBrushSize(defaultSize);
+updateBrushSize(defaultBrushSize);
 
 // 1 tool can be active at a time, either Brush or Eraser
 const brushRadio = document.querySelector("input[id=brush]");
@@ -464,7 +464,7 @@ const resetEditorState = () => {
   eraserRadio.checked = false;
   brushRadioLabel.classList.toggle("active", true);
   eraserRadioLabel.classList.toggle("active", false);
-  updateBrushSize(defaultSize);
+  updateBrushSize(defaultBrushSize);
 
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
