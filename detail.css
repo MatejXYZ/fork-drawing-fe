@@ -25,7 +25,8 @@
 }
 
 .detail-empty,
-.detail-error {
+.detail-error,
+.detail-loading {
   color: var(--muted);
 }
 

@@ -45,6 +45,21 @@ canvas {
   flex-shrink: 0;
 }
 
+.canvas-status.is-loading {
+  color: var(--muted);
+}
+
+.canvas-status.is-loading svg {
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+.canvas-status.is-loading svg path {
+  display: none;
+}
+
 .editor-error {
   color: var(--danger);
   text-align: center;

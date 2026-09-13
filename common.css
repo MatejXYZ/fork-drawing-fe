@@ -97,3 +97,37 @@ main > .hidden {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+.loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.loading-indicator[hidden] {
+  display: none;
+}
+
+.spinner,
+button.is-loading::after {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+button.is-loading::after {
+  content: "";
+  display: block;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

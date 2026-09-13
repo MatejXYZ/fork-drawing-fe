@@ -7,6 +7,7 @@ const section = document.querySelector("#gallery");
 const container = section.querySelector(".gallery-grid");
 const emptyStateMessage = section.querySelector(".gallery-empty");
 const errorStateMessage = section.querySelector(".gallery-error");
+const loadingStateMessage = section.querySelector(".gallery-loading");
 
 // icons
 
@@ -179,6 +180,7 @@ class GalleryModal {
 }
 
 const syncState = (state) => {
+  loadingStateMessage.hidden = state !== "loading";
   emptyStateMessage.hidden = state !== "empty";
   errorStateMessage.hidden = state !== "error";
 };
@@ -303,6 +305,8 @@ class GalleryItem extends HTMLElement {
   };
 
   deleteImage = (ondone) => {
+    this.deleteButton.disabled = true;
+    this.deleteButton.classList.add("is-loading");
     del(`/drawings/${encodeURIComponent(this.imageId)}`)
       .then(() => {
         const urlIndex = galleryUrls.indexOf(this.imageUrl);
@@ -321,7 +325,11 @@ class GalleryItem extends HTMLElement {
           ondone();
         }
       })
-      .catch((error) => console.error("Could not delete image", error));
+      .catch((error) => {
+        console.error("Could not delete image", error);
+        this.deleteButton.disabled = false;
+        this.deleteButton.classList.remove("is-loading");
+      });
   };
 
   sync() {

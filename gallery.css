@@ -16,7 +16,8 @@
 }
 
 #gallery > .gallery-empty,
-#gallery > .gallery-error {
+#gallery > .gallery-error,
+#gallery > .gallery-loading {
   width: 90%;
   max-width: 1200px;
   margin-top: 16px;
@@ -77,7 +78,8 @@
 }
 
 #drafts > .drafts-empty,
-#drafts > .drafts-error {
+#drafts > .drafts-error,
+#drafts > .drafts-loading {
   width: 90%;
   max-width: 1200px;
   margin-top: 16px;

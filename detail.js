@@ -6,6 +6,7 @@ const section = document.querySelector("#detail");
 const canvas = section.querySelector(".detail-canvas");
 const emptyState = section.querySelector(".detail-empty");
 const errorState = section.querySelector(".detail-error");
+const loadingState = section.querySelector(".detail-loading");
 const forkForm = section.querySelector(".detail-fork-form");
 const forkPointInput = section.querySelector("#fork-point");
 const forkPointValue = section.querySelector("#fork-point-value");
@@ -75,6 +76,7 @@ const navigateToIndex = async (index) => {
   const drawing = drawings[index];
   if (!drawing) return;
 
+  loadingState.hidden = false;
   try {
     const response = await get(
       `/drawings/${encodeURIComponent(drawing.id)}?parent=true`,
@@ -83,6 +85,8 @@ const navigateToIndex = async (index) => {
   } catch (error) {
     console.error("Could not load adjacent drawing detail", error);
     return;
+  } finally {
+    loadingState.hidden = true;
   }
 
   const url = new URL(window.location.href);
@@ -142,6 +146,7 @@ forkForm.addEventListener("submit", async (event) => {
   const forkPoint = globalForkPoint - segment.start + 1;
 
   forkButton.disabled = true;
+  forkButton.classList.add("is-loading");
   try {
     const { parentActions, parentMap, ...forkedDrawing } = drawing;
     const response = await post("/drawings", {
@@ -155,11 +160,13 @@ forkForm.addEventListener("submit", async (event) => {
   } catch (error) {
     console.error("Could not fork drawing", error);
     forkButton.disabled = false;
+    forkButton.classList.remove("is-loading");
   }
 });
 
 const loadDetail = async () => {
   errorState.hidden = true;
+  loadingState.hidden = false;
 
   try {
     const response = await get(getListUrl(getSource()));
@@ -182,6 +189,8 @@ const loadDetail = async () => {
     emptyState.hidden = true;
     errorState.hidden = false;
     console.error("Could not load drawing detail", error);
+  } finally {
+    loadingState.hidden = true;
   }
 };
 
@@ -207,5 +216,6 @@ export const hideDetail = () => {
   section.style.display = "none";
   section.classList.add("hidden");
   errorState.hidden = true;
+  loadingState.hidden = true;
   clearCanvas(canvas.getContext("2d"));
 };

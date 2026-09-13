@@ -297,6 +297,7 @@ addEditorEventListener(publishButton, "click", async () => {
   if (drawing.actions.length === 0) return;
 
   publishButton.disabled = true;
+  publishButton.classList.add("is-loading");
   try {
     updateThumbnail();
     const id = await ensureDrawingSaved();
@@ -310,6 +311,7 @@ addEditorEventListener(publishButton, "click", async () => {
   } catch (error) {
     console.error("Could not publish drawing", error);
     publishButton.disabled = false;
+    publishButton.classList.remove("is-loading");
   }
 });
 
@@ -319,12 +321,14 @@ addEditorEventListener(deleteButton, "click", async () => {
   if (!id) return;
 
   deleteButton.disabled = true;
+  deleteButton.classList.add("is-loading");
   try {
     await del(`/drawings/${encodeURIComponent(id)}`);
     window.location.href = "?page=gallery";
   } catch (error) {
     console.error("Could not delete drawing", error);
     deleteButton.disabled = false;
+    deleteButton.classList.remove("is-loading");
   }
 });
 
@@ -411,7 +415,10 @@ const ensureDrawingSaved = async () => {
   return createDrawing();
 };
 
-const showAutosaveMessage = (message = "Saved automatically") => {
+const showAutosaveMessage = (
+  message = "Saved automatically",
+  loading = false,
+) => {
   if (!autosaveStatus) return;
 
   const label = autosaveStatus.querySelector("span");
@@ -419,6 +426,7 @@ const showAutosaveMessage = (message = "Saved automatically") => {
     label.textContent = message;
   }
 
+  autosaveStatus.classList.toggle("is-loading", loading);
   autosaveStatus.hidden = false;
   window.clearTimeout(autosaveStatus.hideTimer);
   autosaveStatus.hideTimer = window.setTimeout(() => {
@@ -430,6 +438,7 @@ const showAutosaveMessage = (message = "Saved automatically") => {
 
 const loadDrawing = async (id) => {
   editorError.hidden = true;
+  showAutosaveMessage("Loading draft...", true);
 
   try {
     const response = await get(
@@ -444,11 +453,13 @@ const loadDrawing = async (id) => {
     drawing.actions = loadedDrawing.actions ?? [];
     drawing.thumbnail = loadedDrawing.thumbnail ?? null;
     renderDrawing(drawing.actions, loadedDrawing.parentActions);
+    autosaveStatus.hidden = true;
   } catch (error) {
     if (getDrawingIdFromUrl() === id) {
       editorError.hidden = false;
     }
     console.error("Could not load drawing", error);
+    autosaveStatus.hidden = true;
   }
 };
 
@@ -464,15 +475,21 @@ const autosave = async () => {
   }
   console.info("Autosave");
   updateThumbnail();
+  showAutosaveMessage("Saving...", true);
   const drawingIdFromUrl = getDrawingIdFromUrl();
-  if (drawingIdFromUrl != null) {
-    await patch(`/drawings/${encodeURIComponent(drawingIdFromUrl)}`, drawing);
-    showAutosaveMessage();
-  } else if (!isDrawingBeingCreated) {
-    isDrawingBeingCreated = true;
-    await createDrawing();
-  } else {
-    console.info("Autosave - Waiting to create drawing on BE.");
+  try {
+    if (drawingIdFromUrl != null) {
+      await patch(`/drawings/${encodeURIComponent(drawingIdFromUrl)}`, drawing);
+      showAutosaveMessage();
+    } else if (!isDrawingBeingCreated) {
+      isDrawingBeingCreated = true;
+      await createDrawing();
+    } else {
+      console.info("Autosave - Waiting to create drawing on BE.");
+    }
+  } catch (error) {
+    showAutosaveMessage("Could not save");
+    console.error("Could not autosave drawing", error);
   }
 };
 
@@ -488,6 +505,7 @@ const resetEditorState = () => {
 
   if (autosaveStatus) {
     autosaveStatus.hidden = true;
+    autosaveStatus.classList.remove("is-loading");
     window.clearTimeout(autosaveStatus.hideTimer);
   }
 

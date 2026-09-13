@@ -92,12 +92,16 @@
         </section>
         <section id="gallery">
             <h1 class="section-heading">Gallery</h1>
+            <p class="gallery-loading loading-indicator" aria-live="polite" hidden><span class="spinner"
+                    aria-hidden="true"></span>Loading drawings...</p>
             <p class="gallery-empty" hidden>No saved drawings yet.</p>
             <p class="gallery-error" role="alert" hidden>Could not load saved drawings. Please try again.</p>
             <div class="gallery-grid"></div>
         </section>
         <section id="drafts">
             <h1 class="section-heading">Drafts</h1>
+            <p class="drafts-loading loading-indicator" aria-live="polite" hidden><span class="spinner"
+                    aria-hidden="true"></span>Loading drafts...</p>
             <p class="drafts-empty" hidden>No drafts yet.</p>
             <p class="drafts-error" role="alert" hidden>Could not load drafts. Please try again.</p>
             <div class="drafts-grid"></div>
@@ -107,6 +111,8 @@
                 <a class="detail-back" href="?page=gallery">Back to home</a>
                 <h1 class="section-heading">Drawing</h1>
             </div>
+            <p class="detail-loading loading-indicator" aria-live="polite" hidden><span class="spinner"
+                    aria-hidden="true"></span>Loading drawing...</p>
             <p class="detail-empty" hidden>Drawing not found.</p>
             <p class="detail-error" role="alert" hidden>Could not load this drawing. Please try again.</p>
             <div class="detail-view">
