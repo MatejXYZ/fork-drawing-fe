@@ -15,7 +15,8 @@
   }
 }
 
-#gallery > .gallery-empty {
+#gallery > .gallery-empty,
+#gallery > .gallery-error {
   width: 90%;
   max-width: 1200px;
   margin-top: 16px;
@@ -26,6 +27,10 @@
     width: 100%;
     padding: 0 16px;
   }
+}
+
+#gallery > .gallery-error {
+  color: var(--danger);
 }
 
 #gallery > .gallery-grid {
@@ -71,7 +76,8 @@
   }
 }
 
-#drafts > .drafts-empty {
+#drafts > .drafts-empty,
+#drafts > .drafts-error {
   width: 90%;
   max-width: 1200px;
   margin-top: 16px;
@@ -82,6 +88,10 @@
     width: 100%;
     padding: 0 16px;
   }
+}
+
+#drafts > .drafts-error {
+  color: var(--danger);
 }
 
 #drafts > .drafts-grid {

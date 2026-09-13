@@ -9,6 +9,7 @@ import {
 
 const editorPage = document.querySelector("#editor");
 const autosaveStatus = document.querySelector("#autosave-status");
+const editorError = document.querySelector(".editor-error");
 const editorListeners = [];
 let editorListenersAttached = true;
 
@@ -364,6 +365,7 @@ const renderDrawing = (actions, parentActions = []) => {
 
 export const showEditor = () => {
   resetEditorState();
+  editorError.hidden = true;
   attachEditorListeners();
   editorPage.style.display = "flex";
   handleWindowResize();
@@ -427,6 +429,8 @@ const showAutosaveMessage = (message = "Saved automatically") => {
 // BE connection
 
 const loadDrawing = async (id) => {
+  editorError.hidden = true;
+
   try {
     const response = await get(
       `/drawings/${encodeURIComponent(id)}?parent=true`,
@@ -441,6 +445,9 @@ const loadDrawing = async (id) => {
     drawing.thumbnail = loadedDrawing.thumbnail ?? null;
     renderDrawing(drawing.actions, loadedDrawing.parentActions);
   } catch (error) {
+    if (getDrawingIdFromUrl() === id) {
+      editorError.hidden = false;
+    }
     console.error("Could not load drawing", error);
   }
 };

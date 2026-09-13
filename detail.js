@@ -5,6 +5,7 @@ import { clearCanvas, renderActions } from "./drawing-renderer.js";
 const section = document.querySelector("#detail");
 const canvas = section.querySelector(".detail-canvas");
 const emptyState = section.querySelector(".detail-empty");
+const errorState = section.querySelector(".detail-error");
 const forkForm = section.querySelector(".detail-fork-form");
 const forkPointInput = section.querySelector("#fork-point");
 const forkPointValue = section.querySelector("#fork-point-value");
@@ -158,6 +159,8 @@ forkForm.addEventListener("submit", async (event) => {
 });
 
 const loadDetail = async () => {
+  errorState.hidden = true;
+
   try {
     const response = await get(getListUrl(getSource()));
     drawings = await response.json();
@@ -176,6 +179,8 @@ const loadDetail = async () => {
   } catch (error) {
     drawings = [];
     render(-1);
+    emptyState.hidden = true;
+    errorState.hidden = false;
     console.error("Could not load drawing detail", error);
   }
 };
@@ -201,5 +206,6 @@ export const showDetail = () => {
 export const hideDetail = () => {
   section.style.display = "none";
   section.classList.add("hidden");
+  errorState.hidden = true;
   clearCanvas(canvas.getContext("2d"));
 };

@@ -45,6 +45,11 @@ canvas {
   flex-shrink: 0;
 }
 
+.editor-error {
+  color: var(--danger);
+  text-align: center;
+}
+
 #cursor {
   position: fixed;
   top: 0;

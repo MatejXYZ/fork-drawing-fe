@@ -27,6 +27,7 @@
     <main>
         <section id="editor">
             <h1 class="section-heading">Editor</h1>
+            <p class="editor-error" role="alert" hidden>Could not load this draft. Please try again.</p>
             <form>
                 <fieldset>
                     <legend>Color</legend>
@@ -91,12 +92,14 @@
         </section>
         <section id="gallery">
             <h1 class="section-heading">Gallery</h1>
-            <p class="gallery-empty">No saved drawings yet.</p>
+            <p class="gallery-empty" hidden>No saved drawings yet.</p>
+            <p class="gallery-error" role="alert" hidden>Could not load saved drawings. Please try again.</p>
             <div class="gallery-grid"></div>
         </section>
         <section id="drafts">
             <h1 class="section-heading">Drafts</h1>
-            <p class="drafts-empty">No drafts yet.</p>
+            <p class="drafts-empty" hidden>No drafts yet.</p>
+            <p class="drafts-error" role="alert" hidden>Could not load drafts. Please try again.</p>
             <div class="drafts-grid"></div>
         </section>
         <section id="detail">
@@ -104,7 +107,8 @@
                 <a class="detail-back" href="?page=gallery">Back to home</a>
                 <h1 class="section-heading">Drawing</h1>
             </div>
-            <p class="detail-empty">Drawing not found.</p>
+            <p class="detail-empty" hidden>Drawing not found.</p>
+            <p class="detail-error" role="alert" hidden>Could not load this drawing. Please try again.</p>
             <div class="detail-view">
                 <form class="detail-fork-form">
                     <label for="fork-point">Fork point</label>

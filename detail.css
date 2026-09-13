@@ -24,8 +24,13 @@
   color: var(--primary);
 }
 
-.detail-empty {
+.detail-empty,
+.detail-error {
   color: var(--muted);
+}
+
+.detail-error {
+  color: var(--danger);
 }
 
 .detail-view {

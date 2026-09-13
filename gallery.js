@@ -6,6 +6,7 @@ import { del, get } from "./api.js";
 const section = document.querySelector("#gallery");
 const container = section.querySelector(".gallery-grid");
 const emptyStateMessage = section.querySelector(".gallery-empty");
+const errorStateMessage = section.querySelector(".gallery-error");
 
 // icons
 
@@ -177,11 +178,9 @@ class GalleryModal {
   }
 }
 
-// fn that checks if gallery is empty (ie. no saved images)
-const syncEmptyState = () => {
-  console.log("sync");
-  emptyStateMessage.style.display =
-    container.childElementCount === 0 ? "block" : "none";
+const syncState = (state) => {
+  emptyStateMessage.hidden = state !== "empty";
+  errorStateMessage.hidden = state !== "error";
 };
 
 // web component
@@ -315,7 +314,7 @@ class GalleryItem extends HTMLElement {
         }
 
         this.remove();
-        syncEmptyState();
+        syncState(container.childElementCount === 0 ? "empty" : "ready");
         showSuccessFeedback("Deleted image");
 
         if (ondone) {
@@ -362,6 +361,8 @@ export const hideGallery = () => {
 };
 
 const loadImages = async () => {
+  syncState("loading");
+
   try {
     const response = await get("/drawings?published=true");
     const drawings = await response.json();
@@ -381,8 +382,10 @@ const loadImages = async () => {
       container.appendChild(item);
     });
 
-    syncEmptyState();
+    syncState(container.childElementCount === 0 ? "empty" : "ready");
   } catch (error) {
+    container.replaceChildren();
+    syncState("error");
     console.error("Could not load gallery", error);
   }
 };
