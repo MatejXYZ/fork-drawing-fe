@@ -13,6 +13,14 @@ const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBo
 const previousIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"/></svg>`;
 const nextIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></svg>`;
 
+const clearLongPressActiveItems = (currentItem) => {
+  document.querySelectorAll(".long-press-active").forEach((item) => {
+    if (item !== currentItem) {
+      item.classList.remove("long-press-active");
+    }
+  });
+};
+
 // modal
 
 class GalleryModal {
@@ -187,6 +195,8 @@ class GalleryItem extends HTMLElement {
     this.icon = document.createElement("div");
     this.img = document.createElement("img");
     this.deleteButton = document.createElement("button");
+    this.longPressTimer = null;
+    this.longPressTriggered = false;
 
     this.icon.className = "icon";
     this.deleteButton.type = "button";
@@ -194,6 +204,12 @@ class GalleryItem extends HTMLElement {
 
     this.deleteButton.innerHTML = deleteIcon;
     this.addEventListener("click", this.handleActivate);
+    this.addEventListener("pointerdown", this.handlePointerDown);
+    this.addEventListener("pointerup", this.cancelLongPress);
+    this.addEventListener("pointercancel", this.cancelLongPress);
+    this.addEventListener("pointermove", this.handlePointerMove);
+    this.addEventListener("contextmenu", this.handleContextMenu);
+    this.addEventListener("focus", this.handleFocus);
     this.addEventListener("keydown", this.handleKeydown);
     this.deleteButton.addEventListener("click", this.handleDelete);
   }
@@ -215,7 +231,13 @@ class GalleryItem extends HTMLElement {
     this.sync();
   }
 
-  handleActivate = () => {
+  handleActivate = (event) => {
+    if (this.longPressTriggered) {
+      this.longPressTriggered = false;
+      event.preventDefault();
+      return;
+    }
+
     if (!this.imageUrl) return;
 
     this.dispatchEvent(
@@ -230,6 +252,42 @@ class GalleryItem extends HTMLElement {
     );
   };
 
+  handlePointerDown = (event) => {
+    if (event.pointerType !== "touch") return;
+
+    this.cancelLongPress();
+    this.longPressTimer = setTimeout(() => {
+      clearLongPressActiveItems(this);
+      this.longPressTriggered = true;
+      this.classList.add("long-press-active");
+      this.focus();
+    }, 500);
+  };
+
+  handlePointerMove = (event) => {
+    if (
+      event.pointerType === "touch" &&
+      event.movementX ** 2 + event.movementY ** 2 > 100
+    ) {
+      this.cancelLongPress();
+    }
+  };
+
+  cancelLongPress = () => {
+    clearTimeout(this.longPressTimer);
+    this.longPressTimer = null;
+  };
+
+  handleContextMenu = (event) => {
+    if (this.longPressTriggered) {
+      event.preventDefault();
+    }
+  };
+
+  handleFocus = () => {
+    clearLongPressActiveItems(this);
+  };
+
   handleKeydown = (event) => {
     if (event.target !== this) return;
 
@@ -241,6 +299,7 @@ class GalleryItem extends HTMLElement {
 
   handleDelete = (event) => {
     event.stopPropagation();
+    this.longPressTriggered = false;
     this.deleteImage();
   };
 
