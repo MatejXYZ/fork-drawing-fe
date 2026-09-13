@@ -103,7 +103,13 @@ const loadDrafts = async () => {
     const response = await get("/drawings?published=false");
     const drafts = await response.json();
 
-    container.replaceChildren(...drafts.map(createDraftItem));
+    const sortedDrafts = [...drafts].sort((a, b) => {
+      const aTime = a?.dateCreated ? new Date(a.dateCreated).getTime() : 0;
+      const bTime = b?.dateCreated ? new Date(b.dateCreated).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    container.replaceChildren(...sortedDrafts.map(createDraftItem));
     syncEmptyState();
   } catch (error) {
     console.error("Could not load drafts", error);

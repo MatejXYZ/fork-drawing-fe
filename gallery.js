@@ -366,7 +366,13 @@ const loadImages = async () => {
     const response = await get("/drawings?published=true");
     const drawings = await response.json();
 
-    drawings.forEach(({ id, thumbnail }) => {
+    const sortedDrawings = [...drawings].sort((a, b) => {
+      const aTime = a?.datePublished ? new Date(a.datePublished).getTime() : 0;
+      const bTime = b?.datePublished ? new Date(b.datePublished).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    sortedDrawings.forEach(({ id, thumbnail }) => {
       const item = document.createElement("gallery-item");
       const alt = `Illustration ${id}`;
 

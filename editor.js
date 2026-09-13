@@ -302,6 +302,7 @@ addEditorEventListener(publishButton, "click", async () => {
     await patch(`/drawings/${encodeURIComponent(id)}`, {
       ...drawing,
       isPublished: true,
+      datePublished: new Date().toISOString(),
     });
     showSuccessFeedback("Published drawing");
     window.location.href = `?page=detail&drawingId=${encodeURIComponent(id)}&source=published`;
