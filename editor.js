@@ -165,6 +165,7 @@ addEditorEventListener(document, "pointerup", (e) => {
       coordinates: points,
       color: color,
       size: brushSize,
+      creationIndex: drawing.actions.length,
     });
   }
   points = [];
